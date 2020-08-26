@@ -1,74 +1,151 @@
 #!/bin/bash
 
-    refresh1=1
-    cups=1
-    ssh=1
-    flash=1
-    fontes=1
-    share=1
-    samba=1
-    firefox=1
-    thunderbird=1
-    remmina=1
-    anydesk=1
-    wps=1
-    skype=1
-    stacer=1
-    google=1
-    teamviewer=1
-    idiomas=1
+    refresh="NAO INSTALADO"
+    cups="NAO INSTALADO"
+    ssh="NAO INSTALADO"
+    flash="NAO INSTALADO"
+    fontes="NAO INSTALADO"
+    share="NAO INSTALADO"
+    samba="NAO INSTALADO"
+    firefox="NAO INSTALADO"
+    thunderbird="NAO INSTALADO"
+    remmina="NAO INSTALADO"
+    anydesk="NAO INSTALADO"
+    wps="NAO INSTALADO"
+    skype="NAO INSTALADO"
+    stacer="NAO INSTALADO"
+    google="NAO INSTALADO"
+    teamviewer="NAO INSTALADO"
+    idiomas="NAO INSTALADO"
     usuario=$(whoami)
-    atalhos=1
-    hplip=1
+    atalhos="NAO INSTALADO"
+    hplip="NAO INSTALADO"
+    upgrade="NAO ATUALIZADO"
 
 
 Main(){
 
 	clear
 
-	Cabecalho
-	echo -e "	\033[01;33m 1 \033[00;46m - Instalar todos os programas padrões Exata Cargo\n\n"
-	echo -e "	\033[01;33m 2 \033[00;46m - Realizar limpeza de arquivos temporarios\n\n"
-	echo -e "	\033[01;33m 3 \033[00;46m - Recuperar pacotes do linux\n\n"
-	echo -e "	\033[01;33m 4 \033[00;46m - Sair\n\n"
+	echo -e " ----------------------------   CONTTI    ----------------------------\n\n\n"
 
-	echo -e"	\033[01;3m Opcao : \033[01;33m "
+	echo -e "	\033[01;33m 1 \033[00;36m - Instalar todos os programas padrões \n\n"
+	echo -e "	\033[01;33m 2 \033[00;36m - Atualizar a base de repositorio do servidor \n\n"
+	echo -e "	\033[01;33m 3 \033[00;36m - Realizar limpeza de arquivos temporarios\n\n"
+	echo -e "	\033[01;33m 4 \033[00;36m - Recuperar pacotes do linux\n\n"
+	echo -e "	\033[01;33m 5 \033[01;31m - Sair\n\n"
+
+	echo -e "	\033[01;33m Opcao : \033[01;32m "
 	read op
-  clear
+    clear
 
 	case $op in
+        
 		"1")Instalar ;;
-		"2")Limpar ;;
-		"3")Recuperar ;;
-		"4")exit ;;
+		"2")updatesrv ;;
+		"3")Limpar ;;
+		"4")Recuperar ;;
+		"5")exit ;;
 		"*")echo -e "Opcao desconhecida.\n\n\n" ;;
 	esac
 }
 
-Cabecalho(){
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                                CONTTI                                  |\n"
-  echo -e " -------------------------------------------------------------------------\n"
+Montar(){
+    echo -e " ----------------------------   CONTTI    ----------------------------\n\n\n"
+	echo "Criando diretorio padroes"
+	echo ""
+
+    if [ -e "/mnt/cache" ];then
+        echo "Diretório Cache já existe."
+    else 
+        sudo mkdir /mnt/cache
+    fi
+
+   if [ -e "/mnt/program" ];then
+        echo "Diretório Program já existe."
+    else 
+        sudo mkdir /mnt/program
+    fi  
+
+    if [ -e "/home/downloads" ];then
+        echo "Diretório downloads já existe.\n"
+    else 
+        sudo mkdir /home/downloads/ 
+        sudo chmod 777 /home/downloads
+        if [ $? -eq 0 ];then
+            echo "Permissões ao diretório adicionadas."
+        else   
+            echo "Erro ao criar permissões do diretório downloads.\n"
+            echo "Verificar script. Linha 76.\n"
+            echo "Voltando ao menu principal em 5 segundos...\n\n"
+            sleep 5
+            Main
+        fi
+    fi  
+	    
+
+    echo ">>>>>>>       Montando compartihamento remoto"
+	echo ""
+    
+    lsb_release -a | grep LinuxMint --silent
+    
+    if [ $? -eq 0 ];then
+        echo $mint
+	    sudo mount -t cifs //$repositorio_ip/aptcachemint  /mnt/cache/ -o username=$login,password=$password,domain=$domain
+    else
+        lsb_release -a | grep Ubuntu --silent
+        if [ $? -eq 0 ];then
+            echo $ubuntu
+            sudo mount -t cifs //$repositorio_ip/aptcacheubuntu  /mnt/cache/ -o username=$login,password=$password,domain=$domain
+	    else
+            echo -e "Erro ao selecionar repositório de cache.\n\n"
+            echo -e "Aplicativo suportado apenas para LinuxMint ou Ubuntu.\n\n"
+            echo -e "Voltando para menu Principal em 5 segundos..."
+            sleep 5
+            Main
+        fi
+    fi
+
+    echo "Atualizando a base do archives" 
+	echo ""
+	
+    sudo cp -R /mnt/cache/* /var/cache/apt/archives/.
+    if [ $? -ne 0 ];then
+        echo " Não foi possível atualizar base do archives."
+    fi
+	
+	echo "Montando compartilhamento dos Programas Padroes"
+	echo " "
+	sudo mount -t cifs //$repositorio_ip/program /mnt/program -o username=$login,password=$password,domain=$domain
+	if [ $? -ne 0 ];then
+        echo -e "Não foi possível copiar alguns programas do repositório de cache."
+    fi
+
+	echo "Atualizando a base de Programas"
+	sudo cp -R /mnt/program/* /home/downloads/.
+    if [ $? -ne 0 ];then
+        echo -e "Não foi possível atualizar a base de programas do repositório, erro ao copiar. Linha 125.\n\n"
+    fi
+
 }
 
 Instalar(){
+    Montar
+    cd /home/downloads
 	clear
-	Cabecalho
+	echo -e " ----------------------------   CONTTI    ----------------------------\n\n\n"
 
 
 ################################################################################################################
 
   Andamento
-  #update
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                              ATUALIZAR                                 |\n"
-  echo -e " -------------------------------------------------------------------------\n"
-	sudo apt-get update
+    #update
+	sudo apt-get update -y
         if [ $? -eq 0 ];then
-            refresh1=0
+            refresh="OK"
             echo
         else
-            refresh1=1
+            refresh="ERRO"
             clear
             echo -e " ----------------------------   CONTTI    ----------------------------\n\n\n"
             echo -e "Falha ao atualizar pacotes, iniciando reparação do DPKG e Resolução de Dependências\n\n\n"
@@ -82,14 +159,11 @@ Instalar(){
 
   Andamento
 	#cups-pdf
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                              CUPS-PDF                                  |\n"
-  echo -e " -------------------------------------------------------------------------\n"
 	sudo apt-get install cups-pdf -y
         if [ $? -eq 0 ];then
-            cups=0
+            cups="OK"
         else
-            cups=1
+            cups="ERRO"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
             sleep 5
         fi
@@ -99,14 +173,11 @@ Instalar(){
 
   Andamento
 	#ssh
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                                 SSH                                    |\n"
-  echo -e " -------------------------------------------------------------------------\n"
 	sudo apt-get install ssh -y
         if [ $? -eq 0 ];then
-            ssh=0
+            ssh="OK"
         else
-            ssh=1
+            ssh="ERRO"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
             sleep 5
         fi
@@ -116,14 +187,11 @@ Instalar(){
 
   Andamento
 	#adobe flash
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                             FLASH-PLUGIN                               |\n"
-  echo -e " -------------------------------------------------------------------------\n"
 	sudo apt-get install flashplugin-installer -y
         if [ $? -eq 0 ];then
-            flash=0
+            flash="OK"
         else
-            flash=1
+            flash="ERRO"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
             sleep 5
         fi
@@ -133,14 +201,11 @@ Instalar(){
 
 	Andamento
 	#fontes microsoft
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                      TTF-MSCOREFONTS-INSTALLER                         |\n"
-  echo -e " -------------------------------------------------------------------------\n"
 	sudo apt-get install ttf-mscorefonts-installer -y
         if [ $? -eq 0 ];then
-            fontes=0
+            fontes="OK"
         else
-            fontes=1
+            fontes="ERRO"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
             sleep 5
         fi
@@ -150,14 +215,11 @@ Instalar(){
 
   Andamento
 	#caja-share
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                              CAJA-SHARE                                |\n"
-  echo -e " -------------------------------------------------------------------------\n"
 	sudo apt-get install caja-share -y
         if [ $? -eq 0 ];then
-            share=0
+            share="OK"
         else
-            share=1
+            share="ERRO"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
             sleep 5
         fi
@@ -167,14 +229,11 @@ Instalar(){
 
   Andamento
 	#samba
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                                SAMBA                                   |\n"
-  echo -e " -------------------------------------------------------------------------\n"
 	sudo apt-get install samba -y
         if [ $? -eq 0 ];then
-            samba=0
+            samba="OK"
         else
-            samba=1
+            samba="ERRO"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
             sleep 5
         fi
@@ -184,50 +243,41 @@ Instalar(){
 
   Andamento
 	#firefox
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                               FIREFOX                                  |\n"
-  echo -e " -------------------------------------------------------------------------\n"
-  sudo apt-get -f install firefox -y
-      if [ $? -eq 0 ];then
-          firefox=0
-      else
-          firefox=1
-          echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
-          sleep 5
-      fi
-  clear
+    sudo apt-get -f install firefox -y
+        if [ $? -eq 0 ];then
+            firefox="OK"
+        else
+            firefox="ERRO"
+            echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
+            sleep 5
+        fi
+    clear
 
 ################################################################################################################
 
   Andamento
 	#thunderbird
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                             THUNDERBIRD                                |\n"
-  echo -e " -------------------------------------------------------------------------\n"
-  sudo apt-get -f install thunderbird-locale-pt-br -y
-      if [ $? -eq 0 ];then
-          thunderbird=0
-      else
-          thunderbird=1
-          echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
-          sleep 5
-      fi
-  clear
+    sudo apt-get -f install thunderbird-locale-pt-br -y
+        if [ $? -eq 0 ];then
+            thunderbird="OK"
+        else
+            thunderbird="ERRO"
+            echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
+            sleep 5
+        fi
+    clear
 
 ################################################################################################################
 
-    Andamento
+  Andamento
 	#remmina
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                               REMMINA                                  |\n"
-  echo -e " -------------------------------------------------------------------------\n"
 	sudo apt-add-repository ppa:remmina-ppa-team/remmina-next -y
 	sudo apt-get update
 	sudo apt-get install remmina -y remmina-plugin-rdp -y libfreerdp-plugins-standard -y
         if [ $? -eq 0 ];then
-            remmina=0
+            remmina="OK"
         else
-            remmina=1
+            remmina="ERRO"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
             sleep 5
         fi
@@ -237,14 +287,11 @@ Instalar(){
 
   Andamento
 	#anydesk
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                               ANYDESK                                  |\n"
-  echo -e " -------------------------------------------------------------------------\n"
-	sudo dpkg -i anydesk_2.9.5-1_amd64.deb
+	sudo dpkg -i anydesk_2.9.5-1_amd64.deb && sudo apt install -f --force-yes
         if [ $? -eq 0 ];then
-            anydesk=0
+            anydesk="OK"
         else
-            anydesk=1
+            anydesk="ERRO"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
             sleep 5
         fi
@@ -254,10 +301,6 @@ Instalar(){
 
   Andamento
 	#WPS
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                              WPS OFFICE                                |\n"
-  echo -e " -------------------------------------------------------------------------\n"
-	cd /home/$usuario/Downloads/WPS\ OFFICE/
     if [ $? -eq 0 ];then
 
         sudo dpkg -i wps-office_10.1.0.5707~a21_amd64.deb
@@ -271,31 +314,31 @@ Instalar(){
 
                     sudo dpkg -i web-office-fonts.deb
                     if [ $? -eq 0 ];then
-                        wps=0
+                        wps="OK"
                     else
-                        wps=1
+                        wps="ERRO, FONTES NÃO INSTALADAS"
                         echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
                         sleep 3
                     fi
                 else
-                    wps=1
+                    wps="ERRO, PACOTE PT-BR NÃO INSTALADO"
                     echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
                     sleep 3
                 fi
 
             else
-                wps=1
+                wps="ERRO, IDIOMA NÃO INSTALADO"
                 echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
                 sleep 3
             fi
         else
-            wps=1
+            wps="ERRO, PACOTE WPS NÃO INSTALADO"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
             sleep 3
         fi
 
     else
-        wps=1
+        wps="ERRO, CAMINHO NÃO ENCONTRADO"
         echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
         sleep 3
     fi
@@ -306,22 +349,18 @@ Instalar(){
 
   Andamento
 	#skype
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                                SKYPE                                   |\n"
-  echo -e " -------------------------------------------------------------------------\n"
-	cd /home/$usuario/Downloads/Linux/Skype	/
     if [ $? -eq 0 ];then
 
         sudo dpkg -i skypeforlinux-64.deb
         if [ $? -eq 0 ];then
-            skype=0
+            skype="OK"
         else
-            skype=1
+            skype="ERRO"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
             sleep 5
         fi
     else
-        skype=1
+        skype="ERRO, PASTA NÃO ENCONTRADA"
         echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
         sleep 5
     fi
@@ -331,21 +370,18 @@ Instalar(){
 
   Andamento
 	#Stacer 64bits
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                                STACER                                  |\n"
-  echo -e " -------------------------------------------------------------------------\n"
-	cd /home/$usuario/Downloads/Linux/Stacer/
     if [ $? -eq 0 ];then
+
         sudo dpkg -i stacer_1.0.8_amd64.deb
         if [ $? -eq 0 ];then
-        stacer=0
+        stacer="OK"
         else
-            stacer=1
+            stacer="ERRO"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
             sleep 5
         fi
     else
-        stacer=1
+        stacer="ERRO, PASTA NÃO ENCONTRADA"
         echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
         sleep 5
     fi
@@ -356,22 +392,18 @@ Instalar(){
 
   Andamento
 	#google chrome
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                             NAVEGADORES                                |\n"
-  echo -e " -------------------------------------------------------------------------\n"
-	cd /home/$usuario/Downloads/Linux/Navegadores/
     if [ $? -eq 0 ];then
 
         sudo dpkg -i google-chrome-stable_current_amd64.deb
         if [ $? -eq 0 ];then
-        google=0
+        google="OK"
         else
-            google=1
+            google="ERRO"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
             sleep 5
         fi
     else
-        google=1
+        google="ERRO, PASTA NÃO ENCONTRADA"
         echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
         sleep 5
     fi
@@ -382,15 +414,11 @@ Instalar(){
 
   Andamento
 	#teamviewer 9
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                             TEAM VIEWER                                |\n"
-  echo -e " -------------------------------------------------------------------------\n"
-	cd /home/$usuario/Downloads/Linux/Team\ Viewer/
     if [ $? -eq 0 ];then
 
         sudo dpkg -i teamviewer_linux.deb
         if [ $? -eq 0 ];then
-        teamviewer=0
+        teamviewer="OK"
         else
             teamviewer="ERRO"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
@@ -408,32 +436,23 @@ Instalar(){
 
   Andamento
 	#pacote de idiomas portugues
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                          PACOTE DE IDIOMA                              |\n"
-  echo -e " -------------------------------------------------------------------------\n"
-	sudo apt-get -f install language-pack-gnome-pt language-pack-pt-base -y
+  sudo apt-get -f install -y
+	sudo apt-get install language-pack-gnome-pt language-pack-pt-base -y
         if [ $? -eq 0 ];then
-
-            sudo apt-get -f install language-support-pt -y
-            if [ $? -eq 0 ];then
-                idiomas=0
-            else
-                idiomas="ERRO, SUPORTE PT-BR"
-                echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
-                sleep 5
-            fi
-
+            idiomas="OK"
         else
             idiomas="ERRO, PACOTE GNOME PT-BR"
             echo -e "Aguarde ou pressione [Enter] para continuar e CTRL+C para sair..."
             sleep 5
         fi
+
     clear
 
 ################################################################################################################
 
 	#criar atalhos de aplicativos na area de trabalho do usuario
-	cd /usr/share/applications
+	
+	cd /usr/share/applications/
 	cp -a anydesk.desktop /home/$usuario/Área\ de\ Trabalho
 	cp -a thunderbird.desktop /home/$usuario/Área\ de\ Trabalho
 	cp -a wps-office-et.desktop /home/$usuario/Área\ de\ Trabalho
@@ -442,32 +461,28 @@ Instalar(){
 	cp -a remmina.desktop /home/$usuario/Área\ de\ Trabalho
 	cp -a skypeforlinux.desktop /home/$usuario/Área\ de\ Trabalho
 	#cp -a filezilla.desktop /home/$usuario/Área\ de\ Trabalho
-  cp -a teamviewer-teamviewer9.desktop /home/$usuario/Área\ de\ Trabalho
-  mkdir /home/$usuario/Área\ de\ Trabalho/REMOTO
-  mkdir /home/$usuario/Área\ de\ Trabalho/SCAN
+	cp -a teamviewer-teamviewer9.desktop /home/$usuario/Área\ de\ Trabalho
+	mkdir /home/$usuario/Área\ de\ Trabalho/REMOTO
+	mkdir /home/$usuario/Área\ de\ Trabalho/SCAN
 
 	cd /opt/teamviewer9/tv_bin/desktop
 	cp -a teamviewer-teamviewer9.desktop /home/$usuario/Área\ de\ Trabalho
-
-  cd /home/$usuario/Área\ de\ Trabalho/
+  cp -a anydesk.desktop /home/$usuario/Área\ de\ Trabalho
+  cd /home/$usuario/Área\ de\ Trabalho
   chmod 777 *
-  atalhos=0
+	atalhos="OK"
 
 ################################################################################################################
 
   Andamento
   #hplip
-  echo -e " -------------------------------------------------------------------------\n"
-  echo -e " |                                HPLIP                                   |\n"
-  echo -e " -------------------------------------------------------------------------\n"
-	cp /home/$usuario/Downloads/Linux/Impressora\ HP/hplip-3.17.10.run /home/$usuario/Downloads
-	cd /home/$usuario/Downloads/
+	cd /home/downloads
 	chmod 777 hplip-3.17.10.run
 	./hplip-3.17.10.run
 
   $count=$(dpkg -l | grep hplip | grep 3.17.10 | wl -c)
-  if [ $count > 0 ]; then
-    hplip=1
+  if [ $count > 0 ];then
+    hplip="OK"
   else
     hplip="ERRO"
   fi
@@ -475,8 +490,17 @@ Instalar(){
 	clear
 	Andamento
   Atualizar
+  upgrade="OK"
   Andamento
   Main
+}
+
+updatesrv(){
+
+    clear
+    echo "Atualizando a base de Pacotes do Servidor"
+    echo ""
+    sudo scp /var/cache/apt/archives/* /mnt/cache/.
 }
 
 ################################################################################################################
@@ -510,7 +534,7 @@ Recuperar(){
 	sudo dpkg --configure -a
 	sudo apt install -f --force-yes
 	sudo apt update
-	sudo apt upgrade -y
+	sudo apt full-upgrade -y
 	sudo apt autoremove -y
 	clear
 	echo -e " ----------------------------   CONTTI    ----------------------------\n\n\n"
@@ -550,7 +574,7 @@ Atualizar(){
   sudo dpkg --configure -a
 	sudo apt install -f --force-yes
 	sudo apt update
-  sudo apt upgrade -y
+  sudo apt full-upgrade -y
 	clear
 	echo -e " ----------------------------   CONTTI    ----------------------------\n\n\n"
 	echo -e " \n\n\n\n "
@@ -561,40 +585,49 @@ Atualizar(){
 	clear
 }
 
-function verifica(){
-    if [ $1 -eq 0 ]; then
-      echo -e "\033[01;32m OK \033[01;43m"
-    else
-      echo -e "\033[01;31m ERRO \033[01;43m"
-    fi
-}
+#function verifica(){
+#    if [ $1 -eq 0 ];then
+#      echo -e \033[01;32m OK"
+#    else
+#      echo -e \033[01;31m ERRO"
+#    fi
+#}
 
 Andamento(){
   clear
 	echo -e " ----------------------------   CONTTI   ----------------------------\n\n\n"
-	echo -e "\033[00;43m01 - ATUALIZAR REPOSITORIOS         -   " ; verifica "$refresh1";
-	echo -e "\033[00;43m02 - CUPS-PDF                       -   " ; verifica "$cups";
-	echo -e "\033[00;43m03 - SSH                            -   " ; verifica "$ssh";
-	echo -e "\033[00;43m04 - FLASH-PLAYER-PLUGIN            -   " ; verifica "$flash";
-	echo -e "\033[00;43m05 - FONTES MICROSOFT               -   " ; verifica "$fontes";
-	echo -e "\033[00;43m06 - CAJA-SHARE (COMPARTILHAMENTO)  -   " ; verifica "$share";
-	echo -e "\033[00;43m07 - SAMBA                          -   " ; verifica "$samba";
-	echo -e "\033[00;43m08 - MOZILLA FIREFOX                -   " ; verifica "$firefox";
-	echo -e "\033[00;43m09 - THUNDERBIRD                    -   " ; verifica "$thunderbird";
-	echo -e "\033[00;43m10 - REMMINA                        -   " ; verifica "$remmina";
-	echo -e "\033[00;43m12 - ANYDESK                        -   " ; verifica "$anydesk";
-	echo -e "\033[00;43m13 - WPS                            -   " ; verifica "$wps";
-	echo -e "\033[00;43m14 - SKYPE                          -   " ; verifica "$skype";
-	echo -e "\033[00;43m15 - skype                          -   " ; verifica "$wps";
-	echo -e "\033[00;43m16 - GOOGLE CHROME                  -   " ; verifica "$google";
-	echo -e "\033[00;43m17 - TEAM VIEWER 9                  -   " ; verifica "$teamviewer";
-	echo -e "\033[00;43m18 - IDIOMAS                        -   " ; verifica "$idiomas";
-	echo -e "\033[00;43m19 - HPLIP 3.17.10                  -   " ; verifica "$hplip";
-	echo -e "\033[00;43m20 - UPGRADE DO SISTEMA             -   " ; verifica "$upgrade";
-  echo -e "\033[00;43m"
-	sleep 4
+    echo -e "\033[00;36m"
+	echo -e "01 - ATUALIZAR REPOSITORIOS         -     $refresh"
+	echo -e "02 - CUPS-PDF                       -     $cups"
+	echo -e "03 - SSH                            -     $ssh"
+	echo -e "04 - FLASH-PLAYER-PLUGIN            -     $flash"
+	echo -e "05 - FONTES MICROSOFT               -     $fontes"
+	echo -e "06 - CAJA-SHARE (COMPARTILHAMENTO)  -     $share"
+	echo -e "07 - SAMBA                          -     $samba"
+	echo -e "08 - MOZILLA FIREFOX                -     $firefox"
+	echo -e "09 - THUNDERBIRD                    -     $thunderbird"
+	echo -e "10 - REMMINA                        -     $remmina"
+	echo -e "12 - ANYDESK                        -     $anydesk"
+	echo -e "13 - WPS                            -     $wps"
+	echo -e "14 - SKYPE                          -     $skype"
+	echo -e "15 - skype                          -     $wps"
+	echo -e "16 - GOOGLE CHROME                  -     $google"
+	echo -e "17 - TEAM VIEWER 9                  -     $teamviewer"
+	echo -e "18 - IDIOMAS                        -     $idiomas"
+	echo -e "19 - HPLIP 3.17.10                  -     $hplip"
+	echo -e "20 - UPGRADE DO SISTEMA             -     $upgrade"
+    echo -e "\033[01;37m"
+
+	if [ "$upgrade" = "OK" ];then
+
+	   echo -e " \n\n\n "
+           echo -e " ------------------------  instalação Finalizada ! ------------------\n\n\n"
+	   echo -e " Tecle [ENTER] \n\n\n "
+           read op
+    fi
+          
+	sleep 3
 	clear
 }
-
 
 Main
