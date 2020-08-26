@@ -21,6 +21,13 @@
     atalhos="NAO INSTALADO"
     hplip="NAO INSTALADO"
     upgrade="NAO ATUALIZADO"
+    
+    login=administrador
+    password=123456
+    repositorio_ip="127.0.0.1"
+    domain="WORKGROUP"
+    repo_mint="aptcachemint"
+    repo_ubuntu="aptcacheubuntu"
 
 
 Main(){
@@ -91,12 +98,12 @@ Montar(){
     
     if [ $? -eq 0 ];then
         echo $mint
-	    sudo mount -t cifs //$repositorio_ip/aptcachemint  /mnt/cache/ -o username=$login,password=$password,domain=$domain
+	    sudo mount -t cifs //$repositorio_ip/$repo_mint  /mnt/cache/ -o username=$login,password=$password,domain=$domain
     else
         lsb_release -a | grep Ubuntu --silent
         if [ $? -eq 0 ];then
             echo $ubuntu
-            sudo mount -t cifs //$repositorio_ip/aptcacheubuntu  /mnt/cache/ -o username=$login,password=$password,domain=$domain
+            sudo mount -t cifs //$repositorio_ip/$repo_ubuntu  /mnt/cache/ -o username=$login,password=$password,domain=$domain
 	    else
             echo -e "Erro ao selecionar repositório de cache.\n\n"
             echo -e "Aplicativo suportado apenas para LinuxMint ou Ubuntu.\n\n"
